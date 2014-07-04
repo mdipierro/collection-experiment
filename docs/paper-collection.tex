@@ -1,0 +1,115 @@
+\documentclass[12pt]{article}
+
+\begin{document}
+
+\seciton{Introducton}
+
+It is becoming increasingly important for any Web Application to expose an API so that computer programs can easily interact with the web application by passing the normal html interface designed for human interaction. In fact, some argue, the API should come first and the html interface should be build on top of the API.
+
+Most modern API are based on on the REST pattern and the JSON protocol.
+REST stands for Representation State Transfer as defined in Roy Fielding’s Ph.D.
+dissertation. JSON is a well known data serialization protocol.
+
+Fielding describes REST as an architectural style for building
+distributed hypermedia systems. 
+
+Simply put in REST a resource is assocatiated to URL. The client communicates with a resource using the HTTP procotol in a stateless manner (the server may have a state and so does the resource, but the HTTP request does not contain state information). The HTTP REQUEST_METHOD is used to specify the type of interaction. GET requests do not change the state of the resource. POST creates a new resource. PUT modifies an existing resources. DELETE deletes an existing resource.
+
+In describing REST Fielding specifies a set of
+constraints that he refers to as the ``architectural properties'' of the Web. These
+constraints (listed below) roughly describe the architecture and properties that
+makeup the Web that we are familiar with today. This is no coincidence given that
+Fielding worked on the definition and development of both version (1.0 and 1.1) of
+the HTTP Protocol.
+
+Fielding constraints the REST to be client-server, stateless, cachable, layered, on-demand, and proving a unifrom intreface. Here we focus out interest on the last constrait: ``proving a 
+uniform interface''.
+
+The uniform interface constraint is described by Fielding as a ``central feature that
+distinguishes the REST architectural style'' from others. This constraint describes
+the way in which systems should interact with data and are broken down into the
+following:
+
+\begin{itemize}
+\item Identification of resources
+\item Manipulation of resources through representations
+\item Self-Descriptive messages
+\item Hypermedia as the engine of application state
+\end{itemize}
+
+One key point here is self-descripive messages. 
+A goal of a RESTful API should be to allow the consumer to underst and how
+to interact with the resources it provides an interface for without requiring
+additional documentation other than the message itself. Humanly readable documentation is
+always welcome but it should not be required.
+
+The Media-type HTTP header can contribute to make a message self-descriptive and some standards have emerged: XHTML, Collection+JSON, HAL, and Siren to name a few. Collection+JSON is the most popular and the one we focused our work on.
+
+Collection+JSON is a JSON-based read/write hypermedia-type designed to support management and querying of simple collections. It is similar to the The Atom Syndication Format (RFC4287) and the The Atom Publishing Protocol (RFC5023) . However, Collection+JSON defines both the format and the semantics in a single media type. It also includes support for Query Templates and expanded write support through the use of a Write Template.
+
+In this paper we push the goals of rest one step further and, as a result, proposed a new Hypermedia protocol which can be thought of as extension of the Collection+JSON protocol.
+
+Given that the goal of the REST architecture is that of providing self-documenting API, it should be possible to automate the process of generating a human interface to the data. Yet we finds that Collection+JSON falls short of its promise for few reasons:
+
+\begin{itemize}
+\item For GET requests it assumes all data matching a query is retruned at once. This is often not the case and pagination is necessary.
+\item The template part does not allow to specify constraints for example: the type of fields, field validators, which fields are readonly and which ones can be writable in POST and GET requests.
+\item In the case of PUT, POST, and DELETE it does not return sufficient information about the action that has been performed or failed to be performed. For example if records where deleted or modified, how many? If a record was created, what is the unique identifier of the record? If the operation failed, why? Which input value did not pass validation?
+\item It is very verbose. When Colleciton+JSON returns a list of records (items), each record contains a full description of the record metadata (name, prompt, links). Often this information is redundant because it can be found in the template section of the response.
+\end{itemize}
+
+Our proposal addressed these shortcomings by adding some properties to the Collection+JSON messages (nonconform=True) and changing the format of the item representation (compact=True).
+
+\begin{verbatim}
+collection.items_found
+collection.next
+collection.items_updated
+collection.items_deleted
+collection.new_item_id
+collection.templates.data[i].type
+collection.templates.data[i].regexp
+collection.templates.data[i].options
+collection.templates.data[i].put_writable
+collection.templates.data[i].post_writable
+collection.error.details
+\end{verbatim}
+
+\begin{verbatim}
+collection.items[i] = {"href": "http://127.0.0.1:8000/super/collections/conform/thing/1/chair", "data": [{"prompt": "Id", "name": "id", "value": 1}, {"prompt": "Name", "name": "name", "value": "Chair"}], "links": [{"prompt": "attr.thing", "rel": "attr.thing", "http://127.0.0.1:8000/super/collections/conform/attr?thing=1": "http://127.0.0.1:8000/super/collections/conform/attr?thing=1"}]} 
+\end{verbatim}
+
+\begin{verbatim}
+collection.links[j] = {"prompt": "attr.thing", "rel": "attr.thing", "http://127.0.0.1:8000/super/collections/conform/attr?thing=1": "http://127.0.0.1:8000/super/collections/conform/attr?thing={id}"}
+collection.items[i] = [1, "Chair"]
+\end{verbatim}
+
+\begin{verbatim}
+{
+  "collection":{
+    "version":"1.0",
+    "href":"http://example.com/movies",
+    "items":[],
+    "links":[],
+    "queries":[],
+    "template":{},
+    "error":{}
+  }
+}
+\end{verbatim}
+
+\begin{verbatim}
+{
+  "collection":{
+    "version":"1.0",
+    "href":"http://example.com/movies",
+    "items":[],
+    "links":[],
+    "queries":[],
+    "template":{},
+    "error":{},
+    "form_errors":{}
+  }
+}
+\end{verbatim}
+
+\end{document}

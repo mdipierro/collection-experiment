@@ -1,0 +1,3 @@
+do not handle _limit and _orderby as filters.
+_limit should be removed when new filters and should now be displayed
+_orderby should be displayed instead and preserved

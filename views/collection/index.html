@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Standard Meta -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <!-- Site Properities -->
+    <title><%= response.title %></title>
+    <link rel="stylesheet" type="text/css" href="<%=URL('static','css')%>/semantic.min.css" />
+    <link rel="stylesheet" type="text/css" href="<%=URL('static','css')%>/jquery.handsontable.full.css" />
+    <style>body{border:0;padding:0;margin:0}</style>
+  </head>
+  <body>
+    <div id="main"></div>
+  </body>
+  <script id="template" type="text/ractive">
+    <div class="ui fixed transparent inverted main menu">
+      <div class="container">
+	<a class="launch item"><i class="icon list layout"></i> Content</a>
+	<div class="title item">
+          <b>Collection+JSON</b> Menu
+	</div>
+	
+	<div class="right menu">
+	  <div class="item">
+	    <div class="ui icon input">
+              <input type="text" placeholder="Search ...">
+              <i class="search link icon"></i>
+	    </div>
+	  </div>
+	</div>
+      </div>
+    </div>
+
+    
+    <div class="ui grid">
+      <div class="row">
+	<div class="four wide column">
+	  <div class="ui vertical menu">
+	    <div class="item">
+	      <div class="ui small icon input">
+		<input type="text" placeholder="Search models..." on-keyup="model-search">
+		<i class="search icon"></i>
+	      </div>
+	    </div>
+	    {{#selected_links:num}}
+	    <a class="item" href="{{href}}" data-tablename="{{model}}" on-click="load-model">{{model}}</a>
+	    {{/selected_links}}
+	    {{^selected_links}}
+	    <a class="item" on-click="new-model">
+	      <i class="plus icon"></i> Create Model
+	    </a>
+	    {{/selected_links}}
+	  </div>
+	</div>
+	<div class="ten wide column">
+	  <div class="ui inverted dimmer">
+	    <div class="ui text loader">Loading</div>
+	  </div>
+
+	  <h2 class="ui inverted black block header">{{tablename}}</h2>
+
+	  <!--div class="ui steps">
+	    <div class="ui step">
+	      Shipping
+	    </div>
+	    <div class="ui active step">
+	      Billing
+	    </div>
+	    <div class="ui disabled step">
+	      Confirm Order
+	    </div>
+	    <div class="ui disabled step">
+	      Complete
+	    </div>
+	  </div -->
+
+	  {{#collection}}
+
+	  <div class="ui icon button {{#(action=='get')}}green{{/action}}" on-click="set-get">
+	    <i class="down icon"></i>
+	    GET
+	  </div>
+
+	  <div class="ui icon button {{#(action=='post')}}green{{/action}}" on-click="set-post">
+	    <i class="up icon"></i>
+	    POST
+	  </div>
+
+	  {{#(items.length==1)}}
+	  <div class="ui icon button {{#(action=='put')}}green{{/action}}" on-click="set-put">
+	    <i class="up icon"></i>
+	    PUT
+	  </div>
+	  {{/(items.length==1)}}
+
+	  {{#(action=='get' && filters.length>0 && items.length>0)}}
+	  <div class="ui icon button" on-click="delete-selected">
+	    <i class="delete icon"></i>
+	    DELETE
+	  </div>
+	  {{/(filters and items)}}
+
+	  <div class="ui segment get-action">
+	    <h3 class="ui header">GET</h3>
+	    <div class="ui grid">
+	      <div class="row">
+		<div class="twelve wide column">
+		  <div class="ui labeled icon input">
+		    <input type="text" placeholder="Filter ..." on-change="add-filter">
+		      <i class="search link icon"></i>
+		  </div>		
+		    </div>
+	      </div>
+	      <div class="row">
+		<div class="twelve wide column">
+		  {{#filters:num}}
+		  <div class="ui red label" on-click="delete-filter" data-index="{{num}}"
+		       style="margin:2px;">
+		    {{value}}
+		    <i class="delete icon"></i>
+		      </div>		  
+		  {{/filters}}
+		  <div class="ui green label">
+		    {{items_found}}
+		  </div>
+		</div>
+	      </div>
+	      <div class="middle aligned row">
+		<div class="six wide column">
+		  {{#previous}}
+		  <a class="ui left floated labeled icon button" on-click="load-model"
+		     href="{{href}}">
+		    <i class="left arrow icon"></i>
+		    Previous
+		  </a>
+		  {{/previous}}
+		</div>
+		<div class="six wide column">
+		  {{#next}}
+		  <a class="ui right floated labeled icon button" on-click="load-model" 
+		     href="{{href}}">
+		    <i class="right arrow icon"></i>
+		    Next
+		  </a>	    
+		  {{/next}}
+		</div>
+	      </div>
+	    </div>
+	  </div>
+
+	  {{#(items.length>0)}}	
+	  <table class="ui table segment get-action">
+	    <thead>
+	      <tr>
+		{{#items[0]}}
+		<th></th>
+		{{#data}}
+		{{#(type!='upload' && type!='text' && type!='blob')}}
+		<th><a on-click="sort-by" data-name="{{name}}">{{prompt}}</a></th>
+		{{/type checks}}
+		{{/data}}
+		<th>Links</th>
+		{{/items[0]}}
+	      </tr>
+	    </thead>
+	    <tbody>
+	      {{#items:num}}
+	      <tr>
+		<td>
+		  <a href="{{href}}" on-click="load-model" class="ui button icon tiny">
+		    <i class="icon edit"></i>
+		  </a>
+		</td>
+		{{#data}}
+		{{#(type!='upload' && type!='text' && type!='blob')}}
+		<td>{{value}}</td>
+		{{/type checks}}
+		{{/data}}
+		<td>
+		{{#links}}
+		{{#(type=='parent')}}
+		<a href="{{href}}" on-click="load-model" data-tablename="{{prompt}}">{{prompt}}</a>
+		{{/parent}}
+		{{#(type=='attachment')}}
+		<a href="{{href}}">{{prompt}}</a>
+		{{/attachment}}
+		{{#(type=='children')}}
+		<a href="{{href}}" on-click="load-model" data-tablename="{{prompt}}">{{prompt}}</a>
+		{{/children}}
+		{{/links}}
+		</td>
+	      </tr>
+	      {{/items}}
+	    </tbody>
+	  </table>
+	  {{/(items.length>0)}}
+	  	  
+	  <form class="ui form segment post-action" on-submit="submit-form">
+	    <h3 class="ui floated center">
+	      {{#filters.length}}PUT{{/filters}}{{^filters.length}}POST{{/filters}}
+	    </h3>
+	    {{#template}}
+	    {{#data}}
+	    <div class="field">	  
+	      {{#(type=='string' || type=='datetime' || type=='time')}}
+	      <div class="ui left labeled icon input">
+		<label>{{prompt}} <i class="hide icon" on-click="remove-field"></i></label>
+		<input type="text" name="{{name}}">
+	      </div>
+	      {{/ end of string}}
+	      {{#(type=='date')}}
+	      <div class="ui left labeled icon input">
+		<label>{{prompt}} <i class="hide icon" on-click="remove-field"></i></label>
+		<input type="date" name="{{name}}">
+	      </div>
+	      {{/ end of string}}
+	      {{#(type=='double' || type=='integer')}}
+	      <div class="ui left labeled icon input">
+		<label>{{prompt}} <i class="hide icon" on-click="remove-field"></i></label>
+		<input type="number" name="{{name}}">
+	      </div>
+	      {{/ end of string}}
+	      {{#(type=='text')}}
+	      <label>{{prompt}} <i class="hide icon" on-click="remove-field"></i></label>
+	      <textarea name="{{name}}"></textarea>
+	      {{/ end of textarea}}
+	      {{#(type=='boolean')}}
+	      <div class="ui toggle checkbox">
+		<input type="checkbox" name="{{name}}">
+	      	<label>{{prompt}} <i class="hide icon" on-click="remove-field"></i></label>
+	      </div>
+	      {{/ end of string}}
+	      {{#(type=='upload')}}
+	      <div class="ui input">
+		<label>{{prompt}} <i class="hide icon" on-click="remove-field"></i></label>
+		<input type="file" name="{{name}}">
+	      </div>	      
+	      {{/ end of upload}}
+	    </div>
+	    {{/data}}
+	    <div class="ui blue submit button" on-click="submit-form">Submit</div>
+	    {{/template}}
+	</div>
+	</form>
+	{{/collection}}
+      </div>
+    </div>
+  </script>
+    
+  <script src="<%=URL('static','js')%>/modernizr.custom.js"></script>
+  <script src="<%=URL('static','js')%>/jquery.js"></script>
+  <script src="<%=URL('static','js')%>/semantic.min.js"></script>
+  <script src="<%=URL('static','js')%>/sugar.min.js"></script>
+  <script src="<%=URL('static','js')%>/ractive.min.js"></script>
+  <script>BASE_URL = '<%=URL('collection','api1',scheme=True)%>';</script>
+  <script src="<%=URL('static','js')%>/main.js"></script>
+</html>
